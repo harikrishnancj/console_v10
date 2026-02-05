@@ -6,13 +6,8 @@ from app.schemas.tenant import TenantCreate
 from app.core.security import hash_password
 
 def signup_tenant_service(db: Session, tenant_data: TenantCreate):
-    # Check if email is verified
     verification_key = f"verified_email:{tenant_data.email}"
     is_verified = redis_client.get(verification_key)
-    
-    # Debug logging
-    print(f"🔍 Checking verification for: {tenant_data.email}")
-    print(f"🔍 Verification status: {is_verified}")
     
     if not is_verified or is_verified != "true":
         raise HTTPException(
@@ -20,12 +15,10 @@ def signup_tenant_service(db: Session, tenant_data: TenantCreate):
             detail="Email not verified. Please verify your email with OTP first."
         )
 
-    # Check for existing tenant with same email
     existing_tenant = db.query(Tenant).filter(Tenant.email == tenant_data.email).first()
     if existing_tenant:
         raise HTTPException(status_code=400, detail="A tenant with this email already exists")
     
-    # Check for existing tenant with same name
     existing_name = db.query(Tenant).filter(Tenant.name == tenant_data.name).first()
     if existing_name:
         raise HTTPException(

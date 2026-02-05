@@ -10,10 +10,8 @@ from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_MI
 from app.crud import crud4user as crud_user
 
 def login_service(db: Session, login_data: TenantValidate):
-    # 1. Try to login as Tenant (Admin)
     tenant = db.query(Tenant).filter(Tenant.email == login_data.email).first()
     if tenant and verify_password(login_data.password, tenant.hashed_password):
-        # It is a Tenant
         claims = {"role": "tenant", "tenant_id": tenant.tenant_id}
         subject = str(tenant.tenant_id)
         token_id = tenant.tenant_id
@@ -21,10 +19,8 @@ def login_service(db: Session, login_data: TenantValidate):
         access_token = create_access_token(subject, claims)
         refresh_token = create_refresh_token(subject, claims)
 
-        # Generate Session ID
         session_id = str(uuid.uuid4())
         
-        # Prepare Vault
         vault_data = {
             "access_token": access_token,
             "refresh_token": refresh_token,
